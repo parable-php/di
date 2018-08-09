@@ -7,6 +7,8 @@ Example usage of a straightforward situation:
 ```php
 use \Parable\Di\Container;
 
+$container = new Container();
+
 $app = $container->get(App::class);
 $app->run();
 ```
@@ -15,6 +17,8 @@ Example usage of an interface-hinted dependency:
 
 ```php
 use \Parable\Di\Container;
+
+$container = new Container();
 
 class App
 {
@@ -34,6 +38,8 @@ Example usage of a class that needs the di itself:
 
 ```php
 use \Parable\Di\Container;
+
+$container = new Container();
 
 class App
 {
