@@ -1,5 +1,10 @@
 ## Parable DI Container
 
+[![Build Status](https://travis-ci.org/parable-php/di.svg?branch=master)](https://travis-ci.org/parable-php/di)
+[![Latest Stable Version](https://poser.pugx.org/parable-php/di/v/stable)](https://packagist.org/packages/parable-php/di)
+[![Latest Unstable Version](https://poser.pugx.org/parable-php/di/v/unstable)](https://packagist.org/packages/parable-php/di)
+[![License](https://poser.pugx.org/parable-php/di/license)](https://packagist.org/packages/parable-php/di)
+
 A simple DI Container that gets the job done.
 
 ### Installation
