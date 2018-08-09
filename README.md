@@ -2,6 +2,14 @@
 
 A simple DI Container that gets the job done.
 
+### Installation
+
+```bash
+$ composer require parable-php/di
+```
+
+### How to use
+
 Example usage of a straightforward situation:
 
 ```php
@@ -57,3 +65,7 @@ var_dump($app->container->has(App::class));
 ```
 
 For all other use cases, simply check the tests in `tests/DiTest.php`.
+
+### Available public methods
+
+- get(string $name)

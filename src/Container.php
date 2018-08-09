@@ -33,32 +33,32 @@ class Container
     /**
      * Returns a stored instance or creates a new one and stores it.
      *
-     * @param string $id
+     * @param string $name
      *
      * @return object
      */
-    public function get(string $id)
+    public function get(string $name)
     {
-        $id = $this->normalize($id);
+        $name = $this->normalize($name);
 
-        if (!$this->has($id)) {
-            $instance = $this->build($id);
+        if (!$this->has($name)) {
+            $instance = $this->build($name);
             $this->store($instance);
         }
 
-        return $this->instances[$id];
+        return $this->instances[$name];
     }
 
     /**
      * Returns whether an instance is currently stored or not.
      *
-     * @param string $id
+     * @param string $name
      */
-    public function has($id): bool
+    public function has($name): bool
     {
-        $id = $this->normalize($id);
+        $name = $this->normalize($name);
 
-        return isset($this->instances[$id]);
+        return isset($this->instances[$name]);
     }
 
     /**
@@ -66,9 +66,9 @@ class Container
      *
      * @return object
      */
-    public function build(string $id)
+    public function build(string $name)
     {
-        return $this->createInstance($id, self::STORED_DEPENDENCIES);
+        return $this->createInstance($name, self::STORED_DEPENDENCIES);
     }
 
     /**
@@ -76,9 +76,9 @@ class Container
      *
      * @return object
      */
-    public function buildAll(string $id)
+    public function buildAll(string $name)
     {
-        return $this->createInstance($id, self::NEW_DEPENDENCIES);
+        return $this->createInstance($name, self::NEW_DEPENDENCIES);
     }
 
     /**
@@ -86,21 +86,21 @@ class Container
      *
      * @return object
      */
-    protected function createInstance(string $id, int $storedDependencies)
+    protected function createInstance(string $name, int $storedDependencies)
     {
-        $id = $this->normalize($id);
+        $name = $this->normalize($name);
 
-        if (interface_exists($id)) {
-            throw ContainerException::fromMessage("Cannot create instance for interface '%s'.", $id);
+        if (interface_exists($name)) {
+            throw ContainerException::fromMessage("Cannot create instance for interface '%s'.", $name);
         }
 
         try {
-            $dependencies = $this->getDependenciesFor($id, $storedDependencies);
+            $dependencies = $this->getDependenciesFor($name, $storedDependencies);
         } catch (\Exception $e) {
             throw ContainerException::fromMessage($e->getMessage());
         }
 
-        return new $id(...$dependencies);
+        return new $name(...$dependencies);
     }
 
     /**
@@ -109,14 +109,14 @@ class Container
      *
      * @return object[]
      */
-    public function getDependenciesFor(string $id, int $storedDependencies = self::STORED_DEPENDENCIES): array
+    public function getDependenciesFor(string $name, int $storedDependencies = self::STORED_DEPENDENCIES): array
     {
-        $id = $this->normalize($id);
+        $name = $this->normalize($name);
 
         try {
-            $reflection = new ReflectionClass($id);
+            $reflection = new ReflectionClass($name);
         } catch (\Exception $e) {
-            throw ContainerException::fromMessage("Could not create instance of '%s'", $id);
+            throw ContainerException::fromMessage("Could not create instance of '%s'", $name);
         }
 
         $construct = $reflection->getConstructor();
@@ -141,7 +141,7 @@ class Container
 
             $dependencyName = $this->normalize($class->name);
 
-            $this->storeRelationship($id, $dependencyName);
+            $this->storeRelationship($name, $dependencyName);
 
             $relationships[] = $dependencyName;
 
@@ -160,29 +160,29 @@ class Container
     /**
      * Clear the requested instance.
      */
-    public function clear(string $id): void
+    public function clear(string $name): void
     {
-        $id = $this->normalize($id);
+        $name = $this->normalize($name);
 
-        if (!$this->has($id)) {
-            throw NotFoundException::fromId($id);
+        if (!$this->has($name)) {
+            throw NotFoundException::fromId($name);
         }
 
-        unset($this->instances[$id]);
+        unset($this->instances[$name]);
 
-        $this->clearRelationship($id);
+        $this->clearRelationship($name);
     }
 
     /**
      * Clear the relationship for the provided id.
      */
-    protected function clearRelationship(string $id): void
+    protected function clearRelationship(string $name): void
     {
         // Clear from the left
-        unset($this->relationships[$id]);
+        unset($this->relationships[$name]);
         // And clear from the right
         foreach ($this->relationships as $left => $right) {
-            if ($right === $id) {
+            if ($right === $name) {
                 unset($this->relationships[$left]);
             }
         }
@@ -196,14 +196,14 @@ class Container
     public function clearExcept(array $keep): void
     {
         $kept = [];
-        foreach ($keep as $id) {
-            $id = $this->normalize($id);
+        foreach ($keep as $name) {
+            $name = $this->normalize($name);
 
-            if (!$this->has($id)) {
-                throw NotFoundException::fromId($id);
+            if (!$this->has($name)) {
+                throw NotFoundException::fromId($name);
             }
 
-            $kept[$id] = $this->get($id);
+            $kept[$name] = $this->get($name);
         }
 
         $this->instances = $kept;
@@ -223,15 +223,15 @@ class Container
      *
      * @param object $instance
      */
-    public function store($instance, string $id = null): void
+    public function store($instance, string $name = null): void
     {
-        if ($id === null) {
-            $id = get_class($instance);
+        if ($name === null) {
+            $name = get_class($instance);
         }
 
-        $id = $this->normalize($id);
+        $name = $this->normalize($name);
 
-        $this->instances[$id] = $instance;
+        $this->instances[$name] = $instance;
     }
 
     /**
@@ -251,10 +251,10 @@ class Container
     }
 
     /**
-     * Normalize the id so it never has a prefixed \
+     * Normalize the name so it never has a prefixed \
      */
-    protected function normalize(string $id): string
+    protected function normalize(string $name): string
     {
-        return ltrim($id, "\\");
+        return ltrim($name, "\\");
     }
 }
