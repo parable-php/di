@@ -1,0 +1,258 @@
+<?php
+
+namespace Parable\Di\Tests;
+
+use Parable\Di\Container;
+use Parable\Di\Exceptions\ContainerException;
+use Parable\Di\Exceptions\NotFoundException;
+use Parable\Di\Tests\Classes\BadDependency;
+use Parable\Di\Tests\Classes\CyclicalDependencyFirst;
+use Parable\Di\Tests\Classes\CyclicalDependencySecond;
+use Parable\Di\Tests\Classes\Dependencies;
+use Parable\Di\Tests\Classes\DiAsDependency;
+use Parable\Di\Tests\Classes\FakeInterface;
+use Parable\Di\Tests\Classes\FakeWithInterface;
+use Parable\Di\Tests\Classes\FakeWithInterfaceDependency;
+use Parable\Di\Tests\Classes\NoDependencies;
+
+class DiTest extends \PHPUnit\Framework\TestCase
+{
+    /** @var Container */
+    protected $container;
+
+    public function setUp()
+    {
+        $this->container = new \Parable\Di\Container();
+    }
+
+    public function testGetStoresAndRetrievesInstance()
+    {
+        $instance1 = $this->container->get(NoDependencies::class);
+        $instance2 = $this->container->get(NoDependencies::class);
+
+        self::assertInstanceOf(NoDependencies::class, $instance1);
+        self::assertInstanceOf(NoDependencies::class, $instance2);
+        self::assertSame($instance1, $instance2);
+    }
+
+    public function testHasWorksAsExpected()
+    {
+        self::assertFalse($this->container->has(NoDependencies::class));
+
+        $this->container->get(NoDependencies::class);
+
+        self::assertTrue($this->container->has(NoDependencies::class));
+    }
+
+    public function testBuildDoesNotStoreInstanceButDoesStoreDependencies()
+    {
+        self::assertFalse($this->container->has(NoDependencies::class));
+        self::assertFalse($this->container->has(Dependencies::class));
+
+        $this->container->build(Dependencies::class);
+
+        // Since build uses stored dependencies, it will also create and store them
+        self::assertTrue($this->container->has(NoDependencies::class));
+        self::assertFalse($this->container->has(Dependencies::class));
+    }
+
+    public function testBuildReturnsInstanceWithStoredDependencies()
+    {
+        /** @var NoDependencies $noDependencies */
+        $noDependencies = $this->container->get(NoDependencies::class);
+        $noDependencies->value = 'this has been changed';
+
+        /** @var Dependencies $dependencies */
+        $dependencies = $this->container->build(Dependencies::class);
+
+        self::assertSame($noDependencies, $dependencies->fakeObject);
+        self::assertSame('this has been changed', $dependencies->fakeObject->value);
+    }
+
+    public function testBuildAllDoesNotStore()
+    {
+        self::assertFalse($this->container->has(NoDependencies::class));
+        self::assertFalse($this->container->has(Dependencies::class));
+
+        $this->container->buildAll(Dependencies::class);
+
+        self::assertFalse($this->container->has(NoDependencies::class));
+        self::assertFalse($this->container->has(Dependencies::class));
+    }
+
+    public function testBuildAllReturnsInstanceWithNewDependencies()
+    {
+        /** @var NoDependencies $noDependencies */
+        $noDependencies = $this->container->get(NoDependencies::class);
+        $noDependencies->value = 'this has been changed';
+
+        /** @var Dependencies $dependencies */
+        $dependencies = $this->container->buildAll(Dependencies::class);
+
+        self::assertNotSame($noDependencies, $dependencies->fakeObject);
+        self::assertSame('new', $dependencies->fakeObject->value);
+    }
+
+    public function testStoreCanStoreInstance()
+    {
+        $noDependencies = new NoDependencies();
+
+        $this->container->store($noDependencies, "stored");
+
+        self::assertTrue($this->container->has("stored"));
+        self::assertSame($noDependencies, $this->container->get("stored"));
+
+        self::assertFalse($this->container->has(NoDependencies::class));
+    }
+
+    public function testCreateInstanceWithInterfaceDependencyThrows()
+    {
+        self::expectException(ContainerException::class);
+        self::expectExceptionMessage("Cannot create instance for interface 'Parable\Di\Tests\Classes\FakeInterface'.");
+
+        $this->container->get(FakeWithInterfaceDependency::class);
+    }
+
+    public function testStoreCanStoreInstanceForInterfaceGet()
+    {
+        $interfaceImplementor = $this->container->get(FakeWithInterface::class);
+        $this->container->store($interfaceImplementor, FakeInterface::class);
+
+        $fakeWithInterface = $this->container->get(FakeWithInterfaceDependency::class);
+
+        self::assertInstanceOf(FakeInterface::class, $fakeWithInterface->fakeInterfaceObject);
+    }
+
+    public function testGetDependenciesForWorks()
+    {
+        $noDependencies = $this->container->get(NoDependencies::class);
+        $noDependencies->value = 'nope';
+
+        $dependencies = $this->container->getDependenciesFor(Dependencies::class);
+
+        $instance = new Dependencies(...$dependencies);
+
+        self::assertInstanceOf(Dependencies::class, $instance);
+        self::assertInstanceOf(NoDependencies::class, $instance->fakeObject);
+        self::assertSame('nope', $instance->fakeObject->value);
+    }
+
+    public function testGetDependenciesForThrowsOnBadId()
+    {
+        self::expectException(ContainerException::class);
+        self::expectExceptionMessage("Could not create instance of 'bla'");
+
+        $this->container->getDependenciesFor("bla");
+    }
+
+    public function testGetDependenciesForThrowsOnStringConstructorParameter()
+    {
+        self::expectException(ContainerException::class);
+        self::expectExceptionMessage("Cannot inject value of type string for constructor parameter \$nope");
+
+        $this->container->getDependenciesFor(BadDependency::class);
+    }
+
+    public function testGetDependenciesForWithNewDependenciesWorks()
+    {
+        $noDependencies = $this->container->get(NoDependencies::class);
+        $noDependencies->value = 'nope';
+
+        $dependencies = $this->container->getDependenciesFor(Dependencies::class, Container::NEW_DEPENDENCIES);
+
+        $instance = new Dependencies(...$dependencies);
+
+        self::assertInstanceOf(Dependencies::class, $instance);
+        self::assertInstanceOf(NoDependencies::class, $instance->fakeObject);
+
+        self::assertNotSame($noDependencies, $instance->fakeObject);
+        self::assertSame('new', $instance->fakeObject->value);
+    }
+
+    public function testIdsAreNormalized()
+    {
+        $this->container->get(NoDependencies::class);
+
+        self::assertTrue($this->container->has(NoDependencies::class));
+        self::assertTrue($this->container->has("Parable\Di\Tests\Classes\NoDependencies"));
+        self::assertTrue($this->container->has("\Parable\Di\Tests\Classes\NoDependencies"));
+        self::assertTrue($this->container->has("\\Parable\\Di\\Tests\\Classes\\NoDependencies"));
+    }
+
+    public function testClearWorks()
+    {
+        $this->container->get(NoDependencies::class);
+        $this->container->get(Dependencies::class);
+
+        self::assertTrue($this->container->has(NoDependencies::class));
+        self::assertTrue($this->container->has(Dependencies::class));
+
+        $this->container->clear(NoDependencies::class);
+
+        self::assertFalse($this->container->has(NoDependencies::class));
+        self::assertTrue($this->container->has(Dependencies::class));
+    }
+
+    public function testClearThrowsForMissingInstance()
+    {
+        self::expectException(NotFoundException::class);
+        self::expectExceptionMessage("No instance found stored for 'Parable\Di\Tests\Classes\NoDependencies'.");
+
+        $this->container->clear(NoDependencies::class);
+    }
+
+    public function testClearAllWorks()
+    {
+        $this->container->get(NoDependencies::class);
+        $this->container->get(Dependencies::class);
+
+        self::assertTrue($this->container->has(NoDependencies::class));
+        self::assertTrue($this->container->has(Dependencies::class));
+
+        $this->container->clearAll();
+
+        self::assertFalse($this->container->has(NoDependencies::class));
+        self::assertFalse($this->container->has(Dependencies::class));
+    }
+
+    public function testClearExceptWorks()
+    {
+        $this->container->get(NoDependencies::class);
+        $this->container->get(Dependencies::class);
+
+        self::assertTrue($this->container->has(NoDependencies::class));
+        self::assertTrue($this->container->has(Dependencies::class));
+
+        $this->container->clearExcept([NoDependencies::class]);
+
+        self::assertTrue($this->container->has(NoDependencies::class));
+        self::assertFalse($this->container->has(Dependencies::class));
+    }
+
+    public function testClearExceptThrowsOnMissingInstance()
+    {
+        self::expectException(NotFoundException::class);
+        self::expectExceptionMessage("No instance found stored for 'Parable\Di\Tests\Classes\NoDependencies'.");
+
+        $this->container->clearExcept([NoDependencies::class]);
+    }
+
+    public function testThrowsOnCyclicalDependency()
+    {
+        self::expectException(ContainerException::class);
+        self::expectExceptionMessage(sprintf(
+            "Cyclical dependency found between '%s' and '%s'",
+            CyclicalDependencySecond::class,
+            CyclicalDependencyFirst::class
+        ));
+
+        $this->container->get(CyclicalDependencyFirst::class);
+    }
+
+    public function testDiContainerCanBeInjected()
+    {
+        $instance = $this->container->get(DiAsDependency::class);
+
+        $this->assertSame($instance->container, $this->container);
+    }
+}

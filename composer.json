@@ -1,0 +1,31 @@
+{
+  "name": "parable-php/di",
+  "type": "library",
+  "description": "Parable DI is a micro Dependency Injection Container",
+  "keywords": ["library", "di", "dependenciy-injection", "micro", "container", "php"],
+  "homepage": "https://devvoh.com/parable/di",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Robin de Graaf",
+      "email": "hello@devvoh.com",
+      "homepage": "https://devvoh.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.1"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^7.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Parable\\Di\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Parable\\Di\\Tests\\": "tests"
+    }
+  }
+}
