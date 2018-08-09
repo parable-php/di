@@ -40,6 +40,11 @@ class App
     public function __construct(ThatInterface $classWithInterface)
     {
     }
+    
+    public function run()
+    {
+        echo "Run? RUN!";
+    }
 }
 
 $classWithInterface = $container->get(ClassWithInterface::class);
