@@ -21,6 +21,11 @@ class Container
      */
     protected $relationships = [];
 
+    /**
+     * @var string[][]
+     */
+    protected $maps;
+
     public function __construct()
     {
         /*
@@ -104,6 +109,23 @@ class Container
     }
 
     /**
+     * Map the requested name to the replacement name. When the requested
+     * name is retrieved, the replacement name will be used to build the instance.
+     */
+    public function map(string $requested, string $replacement): void
+    {
+        $this->maps[$requested] = $replacement;
+    }
+
+    /**
+     * Return the mapping if it exists, otherwise just return the requested name.
+     */
+    protected function getMapIfExists(string $requested): string
+    {
+        return $this->maps[$requested] ?? $requested;
+    }
+
+    /**
      * Get the dependencies for an instance, based on the constructor.
      * Optionally use stored dependencies or always create new ones.
      *
@@ -155,6 +177,22 @@ class Container
         }
 
         return $dependencies;
+    }
+
+    /**
+     * Store the provided instance with the provided id, or the class name of the object.
+     *
+     * @param object $instance
+     */
+    public function store($instance, string $name = null): void
+    {
+        if ($name === null) {
+            $name = get_class($instance);
+        }
+
+        $name = $this->normalize($name);
+
+        $this->instances[$name] = $instance;
     }
 
     /**
@@ -219,22 +257,6 @@ class Container
     }
 
     /**
-     * Store the provided instance with the provided id, or the class name of the object.
-     *
-     * @param object $instance
-     */
-    public function store($instance, string $name = null): void
-    {
-        if ($name === null) {
-            $name = get_class($instance);
-        }
-
-        $name = $this->normalize($name);
-
-        $this->instances[$name] = $instance;
-    }
-
-    /**
      * Store the relationship between the two items.
      */
     protected function storeRelationship(string $class, string $dependency): void
@@ -251,10 +273,13 @@ class Container
     }
 
     /**
-     * Normalize the name so it never has a prefixed \
+     * Normalize the name so it never has a prefixed \,
+     * and return the most appropriate name based on what's
+     * being requested.
      */
     protected function normalize(string $name): string
     {
-        return ltrim($name, "\\");
+        $name = ltrim($name, "\\");
+        return $this->getMapIfExists($name);
     }
 }

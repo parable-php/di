@@ -123,6 +123,18 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertInstanceOf(FakeInterface::class, $fakeWithInterface->fakeInterfaceObject);
     }
 
+    public function testMappingWorksForInterface()
+    {
+        $this->container->map(FakeInterface::class, FakeWithInterface::class);
+        $fakeWithInterface = $this->container->get(FakeWithInterfaceDependency::class);
+
+        self::assertInstanceOf(FakeInterface::class, $fakeWithInterface->fakeInterfaceObject);
+        self::assertInstanceOf(FakeWithInterface::class, $fakeWithInterface->fakeInterfaceObject);
+
+        self::assertTrue($this->container->has(FakeInterface::class));
+        self::assertTrue($this->container->has(FakeWithInterface::class));
+    }
+
     public function testGetDependenciesForWorks()
     {
         $noDependencies = $this->container->get(NoDependencies::class);

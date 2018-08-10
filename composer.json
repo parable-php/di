@@ -2,8 +2,8 @@
   "name": "parable-php/di",
   "type": "library",
   "description": "Parable DI is a micro Dependency Injection Container",
-  "keywords": ["library", "di", "dependenciy-injection", "micro", "container", "php"],
-  "homepage": "https://devvoh.com/parable/di",
+  "keywords": ["library", "micro", "di", "dependency-injection", "container", "parable"],
+  "homepage": "https://github.com/parable-php/di",
   "license": "MIT",
   "authors": [
     {
