@@ -1,5 +1,11 @@
 # Parable PHP DI
 
+## 0.1.2
+
+_Changes_:
+- Removed obsolete doc block annotations for params.
+- Added dynamic return type config.
+
 ## 0.1.1
 
 _Changes_:
