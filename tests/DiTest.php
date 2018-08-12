@@ -58,11 +58,9 @@ class DiTest extends \PHPUnit\Framework\TestCase
 
     public function testBuildReturnsInstanceWithStoredDependencies()
     {
-        /** @var NoDependencies $noDependencies */
         $noDependencies = $this->container->get(NoDependencies::class);
         $noDependencies->value = 'this has been changed';
 
-        /** @var Dependencies $dependencies */
         $dependencies = $this->container->build(Dependencies::class);
 
         self::assertSame($noDependencies, $dependencies->fakeObject);
@@ -82,11 +80,9 @@ class DiTest extends \PHPUnit\Framework\TestCase
 
     public function testBuildAllReturnsInstanceWithNewDependencies()
     {
-        /** @var NoDependencies $noDependencies */
         $noDependencies = $this->container->get(NoDependencies::class);
         $noDependencies->value = 'this has been changed';
 
-        /** @var Dependencies $dependencies */
         $dependencies = $this->container->buildAll(Dependencies::class);
 
         self::assertNotSame($noDependencies, $dependencies->fakeObject);

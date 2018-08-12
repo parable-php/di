@@ -38,8 +38,6 @@ class Container
     /**
      * Returns a stored instance or creates a new one and stores it.
      *
-     * @param string $name
-     *
      * @return object
      */
     public function get(string $name)
@@ -56,10 +54,8 @@ class Container
 
     /**
      * Returns whether an instance is currently stored or not.
-     *
-     * @param string $name
      */
-    public function has($name): bool
+    public function has(string $name): bool
     {
         $name = $this->normalize($name);
 
