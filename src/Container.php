@@ -22,7 +22,7 @@ class Container
     protected $relationships = [];
 
     /**
-     * @var string[][]
+     * @var string[]
      */
     protected $maps;
 
@@ -42,7 +42,7 @@ class Container
      */
     public function get(string $name)
     {
-        $name = $this->normalize($name);
+        $name = $this->getDefinitiveName($name);
 
         if (!$this->has($name)) {
             $instance = $this->build($name);
@@ -57,7 +57,7 @@ class Container
      */
     public function has(string $name): bool
     {
-        $name = $this->normalize($name);
+        $name = $this->getDefinitiveName($name);
 
         return isset($this->instances[$name]);
     }
@@ -89,7 +89,7 @@ class Container
      */
     protected function createInstance(string $name, int $storedDependencies)
     {
-        $name = $this->normalize($name);
+        $name = $this->getDefinitiveName($name);
 
         if (interface_exists($name)) {
             throw ContainerException::fromMessage("Cannot create instance for interface '%s'.", $name);
@@ -110,7 +110,7 @@ class Container
      */
     public function map(string $requested, string $replacement): void
     {
-        $this->maps[$requested] = $replacement;
+        $this->maps[$this->normalize($requested)] = $this->normalize($replacement);
     }
 
     /**
@@ -129,7 +129,7 @@ class Container
      */
     public function getDependenciesFor(string $name, int $storedDependencies = self::STORED_DEPENDENCIES): array
     {
-        $name = $this->normalize($name);
+        $name = $this->getDefinitiveName($name);
 
         try {
             $reflection = new ReflectionClass($name);
@@ -157,7 +157,7 @@ class Container
                 );
             }
 
-            $dependencyName = $this->normalize($class->name);
+            $dependencyName = $this->getDefinitiveName($class->name);
 
             $this->storeRelationship($name, $dependencyName);
 
@@ -186,7 +186,7 @@ class Container
             $name = get_class($instance);
         }
 
-        $name = $this->normalize($name);
+        $name = $this->getDefinitiveName($name);
 
         $this->instances[$name] = $instance;
     }
@@ -196,7 +196,7 @@ class Container
      */
     public function clear(string $name): void
     {
-        $name = $this->normalize($name);
+        $name = $this->getDefinitiveName($name);
 
         if (!$this->has($name)) {
             throw NotFoundException::fromId($name);
@@ -231,7 +231,7 @@ class Container
     {
         $kept = [];
         foreach ($keep as $name) {
-            $name = $this->normalize($name);
+            $name = $this->getDefinitiveName($name);
 
             if (!$this->has($name)) {
                 throw NotFoundException::fromId($name);
@@ -275,7 +275,11 @@ class Container
      */
     protected function normalize(string $name): string
     {
-        $name = ltrim($name, "\\");
-        return $this->getMapIfExists($name);
+        return ltrim($name, "\\");
+    }
+
+    protected function getDefinitiveName(string $name): string
+    {
+        return $this->getMapIfExists($this->normalize($name));
     }
 }

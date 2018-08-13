@@ -1,5 +1,11 @@
 # Parable PHP DI
 
+## 0.1.3
+
+_Bugfixes_:
+- Calling `map()` will now also normalize the names provided.
+- Fixed type hint for `$maps`.
+
 ## 0.1.2
 
 _Changes_:
