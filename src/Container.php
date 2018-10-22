@@ -8,8 +8,8 @@ use ReflectionClass;
 
 class Container
 {
-    public const STORED_DEPENDENCIES = 0;
-    public const NEW_DEPENDENCIES    = 1;
+    public const USE_STORED_DEPENDENCIES = 0;
+    public const USE_NEW_DEPENDENCIES    = 1;
 
     /**
      * @var object[]
@@ -29,7 +29,7 @@ class Container
     public function __construct()
     {
         /*
-         * Store ourselves so we can inject this instance rather than creating
+         * Store ourself so we can inject the current instance rather than creating
          * a secondary instance when requested.
          */
         $this->store($this);
@@ -69,7 +69,7 @@ class Container
      */
     public function build(string $name)
     {
-        return $this->createInstance($name, self::STORED_DEPENDENCIES);
+        return $this->createInstance($name, self::USE_STORED_DEPENDENCIES);
     }
 
     /**
@@ -79,7 +79,7 @@ class Container
      */
     public function buildAll(string $name)
     {
-        return $this->createInstance($name, self::NEW_DEPENDENCIES);
+        return $this->createInstance($name, self::USE_NEW_DEPENDENCIES);
     }
 
     /**
@@ -87,7 +87,7 @@ class Container
      *
      * @return object
      */
-    protected function createInstance(string $name, int $storedDependencies)
+    protected function createInstance(string $name, int $useStoredDependencies)
     {
         $name = $this->getDefinitiveName($name);
 
@@ -96,7 +96,7 @@ class Container
         }
 
         try {
-            $dependencies = $this->getDependenciesFor($name, $storedDependencies);
+            $dependencies = $this->getDependenciesFor($name, $useStoredDependencies);
         } catch (\Exception $e) {
             throw ContainerException::fromMessage($e->getMessage());
         }
@@ -127,23 +127,23 @@ class Container
      *
      * @return object[]
      */
-    public function getDependenciesFor(string $name, int $storedDependencies = self::STORED_DEPENDENCIES): array
+    public function getDependenciesFor(string $name, int $useStoredDependencies = self::USE_STORED_DEPENDENCIES): array
     {
         $name = $this->getDefinitiveName($name);
 
         try {
             $reflection = new ReflectionClass($name);
         } catch (\Exception $e) {
-            throw ContainerException::fromMessage("Could not create instance of '%s'", $name);
+            throw ContainerException::fromMessage('Could not create instance of %s', $name);
         }
 
-        $construct = $reflection->getConstructor();
+        $constructor = $reflection->getConstructor();
 
-        if (!$construct) {
+        if (!$constructor) {
             return [];
         }
 
-        $parameters = $construct->getParameters();
+        $parameters = $constructor->getParameters();
 
         $relationships = [];
         $dependencies  = [];
@@ -151,7 +151,7 @@ class Container
             $class = $parameter->getClass();
             if ($class === null) {
                 throw ContainerException::fromMessage(
-                    "Cannot inject value of type %s for constructor parameter \$%s",
+                    'Cannot inject value of type %s for constructor parameter $%s',
                     $parameter->getType()->getName(),
                     $parameter->name
                 );
@@ -163,12 +163,15 @@ class Container
 
             $relationships[] = $dependencyName;
 
-            if ($storedDependencies === self::NEW_DEPENDENCIES) {
+            if ($useStoredDependencies === self::USE_NEW_DEPENDENCIES) {
                 $dependencies[] = $this->build($dependencyName);
-            } elseif ($storedDependencies === self::STORED_DEPENDENCIES) {
+            } elseif ($useStoredDependencies === self::USE_STORED_DEPENDENCIES) {
                 $dependencies[] = $this->get($dependencyName);
             } else {
-                throw ContainerException::fromMessage('Invalid dependency type value passed: %d', $storedDependencies);
+                throw ContainerException::fromMessage(
+                    'Invalid dependency type value passed: %d',
+                    $useStoredDependencies
+                );
             }
         }
 
@@ -214,6 +217,7 @@ class Container
     {
         // Clear from the left
         unset($this->relationships[$name]);
+
         // And clear from the right
         foreach ($this->relationships as $left => $right) {
             if ($right === $name) {
@@ -261,7 +265,7 @@ class Container
 
         if (isset($this->relationships[$class][$dependency]) && isset($this->relationships[$dependency][$class])) {
             throw ContainerException::fromMessage(
-                "Cyclical dependency found between '%s' and '%s'.",
+                'Cyclical dependency found between %s and %s.',
                 $class,
                 $dependency
             );
@@ -269,15 +273,18 @@ class Container
     }
 
     /**
-     * Normalize the name so it never has a prefixed \,
-     * and return the most appropriate name based on what's
-     * being requested.
+     * Normalize the name so it never has a prefixed \, and return
+     * the most appropriate name based on what's being requested.
      */
     protected function normalize(string $name): string
     {
-        return ltrim($name, "\\");
+        return ltrim($name, '\\');
     }
 
+    /**
+     * Get the definitive name for the provided string. If it's mapped,
+     * get the replacement name. Always makes sure the name is normalized.
+     */
     protected function getDefinitiveName(string $name): string
     {
         return $this->getMapIfExists($this->normalize($name));

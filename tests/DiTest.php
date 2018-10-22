@@ -148,7 +148,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
     public function testGetDependenciesForThrowsOnBadId()
     {
         self::expectException(ContainerException::class);
-        self::expectExceptionMessage("Could not create instance of 'bla'");
+        self::expectExceptionMessage("Could not create instance of bla");
 
         $this->container->getDependenciesFor("bla");
     }
@@ -156,7 +156,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
     public function testGetDependenciesForThrowsOnStringConstructorParameter()
     {
         self::expectException(ContainerException::class);
-        self::expectExceptionMessage("Cannot inject value of type string for constructor parameter \$nope");
+        self::expectExceptionMessage('Cannot inject value of type string for constructor parameter $nope');
 
         $this->container->getDependenciesFor(BadDependency::class);
     }
@@ -166,7 +166,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         $noDependencies = $this->container->get(NoDependencies::class);
         $noDependencies->value = 'nope';
 
-        $dependencies = $this->container->getDependenciesFor(Dependencies::class, Container::NEW_DEPENDENCIES);
+        $dependencies = $this->container->getDependenciesFor(Dependencies::class, Container::USE_NEW_DEPENDENCIES);
 
         $instance = new Dependencies(...$dependencies);
 
@@ -249,7 +249,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
     {
         self::expectException(ContainerException::class);
         self::expectExceptionMessage(sprintf(
-            "Cyclical dependency found between '%s' and '%s'",
+            "Cyclical dependency found between %s and %s",
             CyclicalDependencySecond::class,
             CyclicalDependencyFirst::class
         ));
