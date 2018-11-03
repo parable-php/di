@@ -9,7 +9,7 @@ use ReflectionClass;
 class Container
 {
     public const USE_STORED_DEPENDENCIES = 0;
-    public const USE_NEW_DEPENDENCIES    = 1;
+    public const USE_NEW_DEPENDENCIES = 1;
 
     /**
      * @var object[]
@@ -28,10 +28,7 @@ class Container
 
     public function __construct()
     {
-        /*
-         * Store ourself so we can inject the current instance rather than creating
-         * a secondary instance when requested.
-         */
+        // Store this instance so we return it instead of a secondary instance when requested.
         $this->store($this);
     }
 
@@ -39,6 +36,7 @@ class Container
      * Returns a stored instance or creates a new one and stores it.
      *
      * @return object
+     * @throws ContainerException
      */
     public function get(string $name)
     {
@@ -66,6 +64,7 @@ class Container
      * Build a new instance with stored dependencies.
      *
      * @return object
+     * @throws ContainerException
      */
     public function build(string $name)
     {
@@ -76,6 +75,7 @@ class Container
      * Build a new instance with new dependencies.
      *
      * @return object
+     * @throws ContainerException
      */
     public function buildAll(string $name)
     {
@@ -86,19 +86,23 @@ class Container
      * Create an instance with either new or existing dependencies.
      *
      * @return object
+     * @throws ContainerException
      */
     protected function createInstance(string $name, int $useStoredDependencies)
     {
         $name = $this->getDefinitiveName($name);
 
         if (interface_exists($name)) {
-            throw ContainerException::fromMessage("Cannot create instance for interface '%s'.", $name);
+            throw new ContainerException(sprintf(
+                "Cannot create instance for interface `%s`.",
+                $name
+            ));
         }
 
         try {
             $dependencies = $this->getDependenciesFor($name, $useStoredDependencies);
         } catch (\Exception $e) {
-            throw ContainerException::fromMessage($e->getMessage());
+            throw new ContainerException($e->getMessage());
         }
 
         return new $name(...$dependencies);
@@ -126,15 +130,22 @@ class Container
      * Optionally use stored dependencies or always create new ones.
      *
      * @return object[]
+     * @throws ContainerException
      */
-    public function getDependenciesFor(string $name, int $useStoredDependencies = self::USE_STORED_DEPENDENCIES): array
+    public function getDependenciesFor(
+        string $name,
+        int $useStoredDependencies = self::USE_STORED_DEPENDENCIES
+    ): array
     {
         $name = $this->getDefinitiveName($name);
 
         try {
             $reflection = new ReflectionClass($name);
         } catch (\Exception $e) {
-            throw ContainerException::fromMessage('Could not create instance of %s', $name);
+            throw new ContainerException(sprintf(
+                'Could not create instance for class `%s`.',
+                $name
+            ));
         }
 
         $constructor = $reflection->getConstructor();
@@ -146,15 +157,15 @@ class Container
         $parameters = $constructor->getParameters();
 
         $relationships = [];
-        $dependencies  = [];
+        $dependencies = [];
         foreach ($parameters as $parameter) {
             $class = $parameter->getClass();
             if ($class === null) {
-                throw ContainerException::fromMessage(
-                    'Cannot inject value of type %s for constructor parameter $%s',
+                throw new ContainerException(sprintf(
+                    'Cannot inject value of type `%s` for constructor parameter `$%s`.',
                     $parameter->getType()->getName(),
                     $parameter->name
-                );
+                ));
             }
 
             $dependencyName = $this->getDefinitiveName($class->name);
@@ -168,10 +179,10 @@ class Container
             } elseif ($useStoredDependencies === self::USE_STORED_DEPENDENCIES) {
                 $dependencies[] = $this->get($dependencyName);
             } else {
-                throw ContainerException::fromMessage(
-                    'Invalid dependency type value passed: %d',
+                throw new ContainerException(sprintf(
+                    'Invalid dependency type value passed: `%d`.',
                     $useStoredDependencies
-                );
+                ));
             }
         }
 
@@ -196,6 +207,8 @@ class Container
 
     /**
      * Clear the requested instance.
+     *
+     * @throws NotFoundException
      */
     public function clear(string $name): void
     {
@@ -211,25 +224,12 @@ class Container
     }
 
     /**
-     * Clear the relationship for the provided id.
-     */
-    protected function clearRelationship(string $name): void
-    {
-        // Clear from the left
-        unset($this->relationships[$name]);
-
-        // And clear from the right
-        foreach ($this->relationships as $left => $right) {
-            if ($right === $name) {
-                unset($this->relationships[$left]);
-            }
-        }
-    }
-
-    /**
      * Clear all instances except those provided.
      *
      * @param string[] $keep
+     *
+     * @throws ContainerException
+     * @throws NotFoundException
      */
     public function clearExcept(array $keep): void
     {
@@ -252,23 +252,41 @@ class Container
      */
     public function clearAll(): void
     {
-        $this->instances     = [];
+        $this->instances = [];
         $this->relationships = [];
     }
 
     /**
      * Store the relationship between the two items.
+     *
+     * @throws ContainerException
      */
     protected function storeRelationship(string $class, string $dependency): void
     {
         $this->relationships[$class][$dependency] = true;
 
         if (isset($this->relationships[$class][$dependency]) && isset($this->relationships[$dependency][$class])) {
-            throw ContainerException::fromMessage(
-                'Cyclical dependency found between %s and %s.',
+            throw new ContainerException(sprintf(
+                'Cyclical dependency found between `%s` and `%s`.',
                 $class,
                 $dependency
-            );
+            ));
+        }
+    }
+
+    /**
+     * Clear the relationship for the provided id.
+     */
+    protected function clearRelationship(string $name): void
+    {
+        // Clear from the left
+        unset($this->relationships[$name]);
+
+        // And clear from the right
+        foreach ($this->relationships as $left => &$objectNames) {
+            if (isset($objectNames[$name])) {
+                unset($objectNames[$name]);
+            }
         }
     }
 

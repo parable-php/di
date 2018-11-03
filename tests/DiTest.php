@@ -104,7 +104,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
     public function testCreateInstanceWithInterfaceDependencyThrows()
     {
         self::expectException(ContainerException::class);
-        self::expectExceptionMessage("Cannot create instance for interface 'Parable\Di\Tests\Classes\FakeInterface'.");
+        self::expectExceptionMessage("Cannot create instance for interface `Parable\Di\Tests\Classes\FakeInterface`.");
 
         $this->container->get(FakeWithInterfaceDependency::class);
     }
@@ -148,7 +148,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
     public function testGetDependenciesForThrowsOnBadId()
     {
         self::expectException(ContainerException::class);
-        self::expectExceptionMessage("Could not create instance of bla");
+        self::expectExceptionMessage("Could not create instance for class `bla`.");
 
         $this->container->getDependenciesFor("bla");
     }
@@ -156,7 +156,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
     public function testGetDependenciesForThrowsOnStringConstructorParameter()
     {
         self::expectException(ContainerException::class);
-        self::expectExceptionMessage('Cannot inject value of type string for constructor parameter $nope');
+        self::expectExceptionMessage('Cannot inject value of type `string` for constructor parameter `$nope`.');
 
         $this->container->getDependenciesFor(BadDependency::class);
     }
@@ -204,7 +204,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
     public function testClearThrowsForMissingInstance()
     {
         self::expectException(NotFoundException::class);
-        self::expectExceptionMessage("No instance found stored for 'Parable\Di\Tests\Classes\NoDependencies'.");
+        self::expectExceptionMessage("No instance found stored for `Parable\Di\Tests\Classes\NoDependencies`.");
 
         $this->container->clear(NoDependencies::class);
     }
@@ -240,7 +240,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
     public function testClearExceptThrowsOnMissingInstance()
     {
         self::expectException(NotFoundException::class);
-        self::expectExceptionMessage("No instance found stored for 'Parable\Di\Tests\Classes\NoDependencies'.");
+        self::expectExceptionMessage("No instance found stored for `Parable\Di\Tests\Classes\NoDependencies`.");
 
         $this->container->clearExcept([NoDependencies::class]);
     }
@@ -249,7 +249,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
     {
         self::expectException(ContainerException::class);
         self::expectExceptionMessage(sprintf(
-            "Cyclical dependency found between %s and %s",
+            "Cyclical dependency found between `%s` and `%s`.",
             CyclicalDependencySecond::class,
             CyclicalDependencyFirst::class
         ));

@@ -2,6 +2,6 @@
 
 namespace Parable\Di\Exceptions;
 
-class ContainerException extends AbstractException
+class ContainerException extends \Exception
 {
 }

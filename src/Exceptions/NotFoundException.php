@@ -2,10 +2,10 @@
 
 namespace Parable\Di\Exceptions;
 
-class NotFoundException extends AbstractException
+class NotFoundException extends \Exception
 {
     public static function fromId(string $id)
     {
-        return self::fromMessage("No instance found stored for '%s'.", $id);
+        return new self(sprintf("No instance found stored for `%s`.", $id));
     }
 }
