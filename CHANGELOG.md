@@ -1,5 +1,11 @@
 # Parable PHP DI
 
+## 0.2.1
+
+_Bugfixes_
+
+- Fixed bug where in some cases, an un-injectable parameter's type could not be established.
+
 ## 0.2.0
 
 _Bugfixes_

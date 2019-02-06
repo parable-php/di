@@ -162,8 +162,7 @@ class Container
             $class = $parameter->getClass();
             if ($class === null) {
                 throw new ContainerException(sprintf(
-                    'Cannot inject value of type `%s` for constructor parameter `$%s`.',
-                    $parameter->getType()->getName(),
+                    'Cannot inject value for constructor parameter `$%s`.',
                     $parameter->name
                 ));
             }

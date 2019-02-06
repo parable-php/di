@@ -156,7 +156,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
     public function testGetDependenciesForThrowsOnStringConstructorParameter()
     {
         self::expectException(ContainerException::class);
-        self::expectExceptionMessage('Cannot inject value of type `string` for constructor parameter `$nope`.');
+        self::expectExceptionMessage('Cannot inject value for constructor parameter `$nope`.');
 
         $this->container->getDependenciesFor(BadDependency::class);
     }
