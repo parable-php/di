@@ -1,5 +1,10 @@
 # Parable PHP DI
 
+## 0.2.2
+
+_Changes_
+- Define strict types.
+
 ## 0.2.1
 
 _Bugfixes_
@@ -8,11 +13,11 @@ _Bugfixes_
 
 ## 0.2.0
 
-_Bugfixes_
-- `clearRelationship()` had a bug where right-hand relationships weren't being cleared, leading to more class names being stored than necessary.
-
 _Changes_
 - `STORED_DEPENDENCIES` and `NEW_DEPENDENCIES` are now `USE_STORED_DEPENDENCIES` and `USE_NEW_DEPENDENCIES`, for clarity.
+
+_Bugfixes_
+- `clearRelationship()` had a bug where right-hand relationships weren't being cleared, leading to more class names being stored than necessary.
 
 ## 0.1.3
 
