@@ -2,7 +2,7 @@
 
 namespace Parable\Di\Tests\Classes;
 
-class BadDependency
+class ScalarDependency
 {
     public function __construct(
         string $nope

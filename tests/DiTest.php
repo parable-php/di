@@ -5,7 +5,7 @@ namespace Parable\Di\Tests;
 use Parable\Di\Container;
 use Parable\Di\Exceptions\ContainerException;
 use Parable\Di\Exceptions\NotFoundException;
-use Parable\Di\Tests\Classes\BadDependency;
+use Parable\Di\Tests\Classes\ScalarDependency;
 use Parable\Di\Tests\Classes\CyclicalDependencyFirst;
 use Parable\Di\Tests\Classes\CyclicalDependencySecond;
 use Parable\Di\Tests\Classes\Dependencies;
@@ -14,6 +14,9 @@ use Parable\Di\Tests\Classes\FakeInterface;
 use Parable\Di\Tests\Classes\FakeWithInterface;
 use Parable\Di\Tests\Classes\FakeWithInterfaceDependency;
 use Parable\Di\Tests\Classes\NoDependencies;
+use Parable\Di\Tests\Classes\ScalarDependencyWithDefault;
+use Parable\Di\Tests\Classes\ScalarDependencyWithDefaultAndNonScalar;
+use Parable\Di\Tests\Classes\ScalarDependencyWithDefaultAndNonScalarReverse;
 
 class DiTest extends \PHPUnit\Framework\TestCase
 {
@@ -156,9 +159,37 @@ class DiTest extends \PHPUnit\Framework\TestCase
     public function testGetDependenciesForThrowsOnStringConstructorParameter()
     {
         self::expectException(ContainerException::class);
-        self::expectExceptionMessage('Cannot inject value for constructor parameter `$nope`.');
+        self::expectExceptionMessage('Cannot inject value for non-optional constructor parameter `$nope` without a default value.');
 
-        $this->container->getDependenciesFor(BadDependency::class);
+        $this->container->getDependenciesFor(ScalarDependency::class);
+    }
+
+    public function testGetDependenciesForScalarWithDefaultSetsDefaultValueAppropriately()
+    {
+        $dependencies = $this->container->getDependenciesFor(ScalarDependencyWithDefault::class);
+
+        self::assertSame(
+            ['hello'],
+            $dependencies
+        );
+    }
+
+    public function testGetDependenciesForWillUseDefaultValueForScalarIfMixedWithActualDependency()
+    {
+        $dependencies = $this->container->getDependenciesFor(ScalarDependencyWithDefaultAndNonScalar::class);
+
+        self::assertInstanceOf(NoDependencies::class, $dependencies[0]);
+        self::assertSame('hello', $dependencies[1]);
+    }
+
+    public function testOptionalBeforeRequiredBreaksGetDependenciesFor()
+    {
+        self::expectException(ContainerException::class);
+        self::expectExceptionMessage(
+            'Cannot inject value for non-optional constructor parameter `$nope` without a default value.'
+        );
+
+        $this->container->getDependenciesFor(ScalarDependencyWithDefaultAndNonScalarReverse::class);
     }
 
     public function testGetDependenciesForWithNewDependenciesWorks()
@@ -175,6 +206,14 @@ class DiTest extends \PHPUnit\Framework\TestCase
 
         self::assertNotSame($noDependencies, $instance->fakeObject);
         self::assertSame('new', $instance->fakeObject->value);
+    }
+
+    public function testGetDependenciesForDoesntLikeInvalidValuePassed()
+    {
+        $this->expectException(ContainerException::class);
+        $this->expectExceptionMessage('Invalid dependency type value passed: `666`');
+
+        $this->container->getDependenciesFor(Dependencies::class, 666);
     }
 
     public function testIdsAreNormalized()

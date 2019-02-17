@@ -1,5 +1,10 @@
 # Parable PHP DI
 
+## 0.2.3
+
+_Changes_
+- Scalar parameters can now also be handled, but _only if_ they are considered optional. This means _after_ any required parameters, and _with_ a default value.
+
 ## 0.2.2
 
 _Changes_

@@ -160,11 +160,18 @@ class Container
         $dependencies = [];
         foreach ($parameters as $parameter) {
             $class = $parameter->getClass();
+
             if ($class === null) {
-                throw new ContainerException(sprintf(
-                    'Cannot inject value for constructor parameter `$%s`.',
-                    $parameter->name
-                ));
+                if (!$parameter->isOptional()) {
+                    throw new ContainerException(sprintf(
+                        'Cannot inject value for non-optional constructor parameter `$%s` without a default value.',
+                        $parameter->name
+                    ));
+                }
+
+                $dependencies[] = $parameter->getDefaultValue();
+
+                continue;
             }
 
             $dependencyName = $this->getDefinitiveName($class->name);
