@@ -4,7 +4,7 @@
 
 _Changes_
 - Remove `object` return type hinting, since it didn't actually help.
-- Thanks to @dmvdbrugge, `dynamicReturnTypeMeta.json` has been replaced by the PhpStorm-native `.phpstorm.meta.php`.
+- Thanks to @dmvdbrugge, `dynamicReturnTypeMeta.json` has been replaced by the PhpStorm-native `.phpstorm.meta.php`. See PR #1.
 
 ## 0.2.3
 
