@@ -2,7 +2,9 @@
 
 namespace Parable\Di\Exceptions;
 
-class NotFoundException extends \Exception
+use Exception;
+
+class NotFoundException extends Exception
 {
     public static function fromId(string $id)
     {

@@ -5,6 +5,7 @@ namespace Parable\Di;
 use Parable\Di\Exceptions\ContainerException;
 use Parable\Di\Exceptions\NotFoundException;
 use ReflectionClass;
+use Throwable;
 
 class Container
 {
@@ -12,7 +13,7 @@ class Container
     public const USE_NEW_DEPENDENCIES = 1;
 
     /**
-     * @var object[]
+     * @var array
      */
     protected $instances = [];
 
@@ -35,7 +36,6 @@ class Container
     /**
      * Returns a stored instance or creates a new one and stores it.
      *
-     * @return object
      * @throws ContainerException
      */
     public function get(string $name)
@@ -63,7 +63,6 @@ class Container
     /**
      * Build a new instance with stored dependencies.
      *
-     * @return object
      * @throws ContainerException
      */
     public function build(string $name)
@@ -74,7 +73,6 @@ class Container
     /**
      * Build a new instance with new dependencies.
      *
-     * @return object
      * @throws ContainerException
      */
     public function buildAll(string $name)
@@ -85,7 +83,6 @@ class Container
     /**
      * Create an instance with either new or existing dependencies.
      *
-     * @return object
      * @throws ContainerException
      */
     protected function createInstance(string $name, int $useStoredDependencies)
@@ -101,7 +98,7 @@ class Container
 
         try {
             $dependencies = $this->getDependenciesFor($name, $useStoredDependencies);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             throw new ContainerException($e->getMessage());
         }
 
@@ -129,19 +126,17 @@ class Container
      * Get the dependencies for an instance, based on the constructor.
      * Optionally use stored dependencies or always create new ones.
      *
-     * @return object[]
      * @throws ContainerException
      */
     public function getDependenciesFor(
         string $name,
         int $useStoredDependencies = self::USE_STORED_DEPENDENCIES
-    ): array
-    {
+    ): array {
         $name = $this->getDefinitiveName($name);
 
         try {
             $reflection = new ReflectionClass($name);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             throw new ContainerException(sprintf(
                 'Could not create instance for class `%s`.',
                 $name
@@ -197,8 +192,6 @@ class Container
 
     /**
      * Store the provided instance with the provided id, or the class name of the object.
-     *
-     * @param object $instance
      */
     public function store($instance, string $name = null): void
     {

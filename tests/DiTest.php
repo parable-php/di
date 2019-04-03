@@ -25,7 +25,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
 
     public function setUp()
     {
-        $this->container = new \Parable\Di\Container();
+        $this->container = new Container();
     }
 
     public function testGetStoresAndRetrievesInstance()
@@ -159,7 +159,9 @@ class DiTest extends \PHPUnit\Framework\TestCase
     public function testGetDependenciesForThrowsOnStringConstructorParameter()
     {
         self::expectException(ContainerException::class);
-        self::expectExceptionMessage('Cannot inject value for non-optional constructor parameter `$nope` without a default value.');
+        self::expectExceptionMessage(
+            'Cannot inject value for non-optional constructor parameter `$nope` without a default value.'
+        );
 
         $this->container->getDependenciesFor(ScalarDependency::class);
     }

@@ -1,5 +1,11 @@
 # Parable PHP DI
 
+## 0.2.4
+
+_Changes_
+- Remove `object` return type hinting, since it didn't actually help.
+- Thanks to @dmvdbrugge, `dynamicReturnTypeMeta.json` has been replaced by the PhpStorm-native `.phpstorm.meta.php`.
+
 ## 0.2.3
 
 _Changes_

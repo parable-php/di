@@ -2,6 +2,8 @@
 
 namespace Parable\Di\Exceptions;
 
-class ContainerException extends \Exception
+use Exception;
+
+class ContainerException extends Exception
 {
 }
