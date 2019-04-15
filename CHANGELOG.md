@@ -1,5 +1,10 @@
 # Parable PHP DI
 
+## 0.2.5
+
+_Changes_
+- `normalize()` now also trims the provided string of whitespace first.
+
 ## 0.2.4
 
 _Changes_

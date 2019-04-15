@@ -295,7 +295,7 @@ class Container
      */
     protected function normalize(string $name): string
     {
-        return ltrim($name, '\\');
+        return ltrim(trim($name), '\\');
     }
 
     /**

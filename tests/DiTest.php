@@ -225,6 +225,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertTrue($this->container->has(NoDependencies::class));
         self::assertTrue($this->container->has("Parable\Di\Tests\Classes\NoDependencies"));
         self::assertTrue($this->container->has("\Parable\Di\Tests\Classes\NoDependencies"));
+        self::assertTrue($this->container->has(" \Parable\Di\Tests\Classes\NoDependencies "));
         self::assertTrue($this->container->has("\\Parable\\Di\\Tests\\Classes\\NoDependencies"));
     }
 
