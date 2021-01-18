@@ -151,10 +151,11 @@ class Container
 
         $parameters = $constructor->getParameters();
 
-        $relationships = [];
         $dependencies = [];
         foreach ($parameters as $parameter) {
-            $class = $parameter->getClass();
+            $class = $parameter->getType() && !$parameter->getType()->isBuiltin()
+                ? new ReflectionClass($parameter->getType()->getName())
+                : null;
 
             if ($class === null) {
                 if (!$parameter->isOptional()) {
@@ -172,8 +173,6 @@ class Container
             $dependencyName = $this->getDefinitiveName($class->name);
 
             $this->storeRelationship($name, $dependencyName);
-
-            $relationships[] = $dependencyName;
 
             if ($useStoredDependencies === self::USE_NEW_DEPENDENCIES) {
                 $dependencies[] = $this->build($dependencyName);

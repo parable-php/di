@@ -1,5 +1,10 @@
 # Parable PHP DI
 
+## 0.2.6
+
+_Changes_
+- `ReflectionParameter::getClass()` is deprecated in php 8+, so reworked to use `ReflectionParameter::getType()` instead.
+
 ## 0.2.5
 
 _Changes_
