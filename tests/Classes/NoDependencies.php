@@ -4,5 +4,5 @@ namespace Parable\Di\Tests\Classes;
 
 class NoDependencies
 {
-    public $value = 'new';
+    public string $value = 'new';
 }

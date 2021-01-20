@@ -17,18 +17,18 @@ use Parable\Di\Tests\Classes\NoDependencies;
 use Parable\Di\Tests\Classes\ScalarDependencyWithDefault;
 use Parable\Di\Tests\Classes\ScalarDependencyWithDefaultAndNonScalar;
 use Parable\Di\Tests\Classes\ScalarDependencyWithDefaultAndNonScalarReverse;
+use PHPUnit\Framework\TestCase;
 
-class DiTest extends \PHPUnit\Framework\TestCase
+class DiTest extends TestCase
 {
-    /** @var Container */
-    protected $container;
+    protected Container $container;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->container = new Container();
     }
 
-    public function testGetStoresAndRetrievesInstance()
+    public function testGetStoresAndRetrievesInstance(): void
     {
         $instance1 = $this->container->get(NoDependencies::class);
         $instance2 = $this->container->get(NoDependencies::class);
@@ -38,7 +38,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertSame($instance1, $instance2);
     }
 
-    public function testHasWorksAsExpected()
+    public function testHasWorksAsExpected(): void
     {
         self::assertFalse($this->container->has(NoDependencies::class));
 
@@ -47,7 +47,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertTrue($this->container->has(NoDependencies::class));
     }
 
-    public function testBuildDoesNotStoreInstanceButDoesStoreDependencies()
+    public function testBuildDoesNotStoreInstanceButDoesStoreDependencies(): void
     {
         self::assertFalse($this->container->has(NoDependencies::class));
         self::assertFalse($this->container->has(Dependencies::class));
@@ -59,7 +59,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertFalse($this->container->has(Dependencies::class));
     }
 
-    public function testBuildReturnsInstanceWithStoredDependencies()
+    public function testBuildReturnsInstanceWithStoredDependencies(): void
     {
         $noDependencies = $this->container->get(NoDependencies::class);
         $noDependencies->value = 'this has been changed';
@@ -70,7 +70,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertSame('this has been changed', $dependencies->fakeObject->value);
     }
 
-    public function testBuildAllDoesNotStore()
+    public function testBuildAllDoesNotStore(): void
     {
         self::assertFalse($this->container->has(NoDependencies::class));
         self::assertFalse($this->container->has(Dependencies::class));
@@ -81,7 +81,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertFalse($this->container->has(Dependencies::class));
     }
 
-    public function testBuildAllReturnsInstanceWithNewDependencies()
+    public function testBuildAllReturnsInstanceWithNewDependencies(): void
     {
         $noDependencies = $this->container->get(NoDependencies::class);
         $noDependencies->value = 'this has been changed';
@@ -92,7 +92,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertSame('new', $dependencies->fakeObject->value);
     }
 
-    public function testStoreCanStoreInstance()
+    public function testStoreCanStoreInstance(): void
     {
         $noDependencies = new NoDependencies();
 
@@ -104,15 +104,15 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertFalse($this->container->has(NoDependencies::class));
     }
 
-    public function testCreateInstanceWithInterfaceDependencyThrows()
+    public function testCreateInstanceWithInterfaceDependencyThrows(): void
     {
-        self::expectException(ContainerException::class);
-        self::expectExceptionMessage("Cannot create instance for interface `Parable\Di\Tests\Classes\FakeInterface`.");
+        $this->expectException(ContainerException::class);
+        $this->expectExceptionMessage("Cannot create instance for interface `Parable\Di\Tests\Classes\FakeInterface`.");
 
         $this->container->get(FakeWithInterfaceDependency::class);
     }
 
-    public function testStoreCanStoreInstanceForInterfaceGet()
+    public function testStoreCanStoreInstanceForInterfaceGet(): void
     {
         $interfaceImplementor = $this->container->get(FakeWithInterface::class);
         $this->container->store($interfaceImplementor, FakeInterface::class);
@@ -122,7 +122,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertInstanceOf(FakeInterface::class, $fakeWithInterface->fakeInterfaceObject);
     }
 
-    public function testMappingWorksForInterface()
+    public function testMappingWorksForInterface(): void
     {
         $this->container->map(FakeInterface::class, FakeWithInterface::class);
         $fakeWithInterface = $this->container->get(FakeWithInterfaceDependency::class);
@@ -134,7 +134,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertTrue($this->container->has(FakeWithInterface::class));
     }
 
-    public function testGetDependenciesForWorks()
+    public function testGetDependenciesForWorks(): void
     {
         $noDependencies = $this->container->get(NoDependencies::class);
         $noDependencies->value = 'nope';
@@ -148,25 +148,25 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertSame('nope', $instance->fakeObject->value);
     }
 
-    public function testGetDependenciesForThrowsOnBadId()
+    public function testGetDependenciesForThrowsOnBadId(): void
     {
-        self::expectException(ContainerException::class);
-        self::expectExceptionMessage("Could not create instance for class `bla`.");
+        $this->expectException(ContainerException::class);
+        $this->expectExceptionMessage("Could not create instance for class `bla`.");
 
         $this->container->getDependenciesFor("bla");
     }
 
-    public function testGetDependenciesForThrowsOnStringConstructorParameter()
+    public function testGetDependenciesForThrowsOnStringConstructorParameter(): void
     {
-        self::expectException(ContainerException::class);
-        self::expectExceptionMessage(
+        $this->expectException(ContainerException::class);
+        $this->expectExceptionMessage(
             'Cannot inject value for non-optional constructor parameter `$nope` without a default value.'
         );
 
         $this->container->getDependenciesFor(ScalarDependency::class);
     }
 
-    public function testGetDependenciesForScalarWithDefaultSetsDefaultValueAppropriately()
+    public function testGetDependenciesForScalarWithDefaultSetsDefaultValueAppropriately(): void
     {
         $dependencies = $this->container->getDependenciesFor(ScalarDependencyWithDefault::class);
 
@@ -176,7 +176,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testGetDependenciesForWillUseDefaultValueForScalarIfMixedWithActualDependency()
+    public function testGetDependenciesForWillUseDefaultValueForScalarIfMixedWithActualDependency(): void
     {
         $dependencies = $this->container->getDependenciesFor(ScalarDependencyWithDefaultAndNonScalar::class);
 
@@ -184,17 +184,17 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertSame('hello', $dependencies[1]);
     }
 
-    public function testOptionalBeforeRequiredBreaksGetDependenciesFor()
+    public function testOptionalBeforeRequiredBreaksGetDependenciesFor(): void
     {
-        self::expectException(ContainerException::class);
-        self::expectExceptionMessage(
+        $this->expectException(ContainerException::class);
+        $this->expectExceptionMessage(
             'Cannot inject value for non-optional constructor parameter `$nope` without a default value.'
         );
 
         $this->container->getDependenciesFor(ScalarDependencyWithDefaultAndNonScalarReverse::class);
     }
 
-    public function testGetDependenciesForWithNewDependenciesWorks()
+    public function testGetDependenciesForWithNewDependenciesWorks(): void
     {
         $noDependencies = $this->container->get(NoDependencies::class);
         $noDependencies->value = 'nope';
@@ -210,7 +210,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertSame('new', $instance->fakeObject->value);
     }
 
-    public function testGetDependenciesForDoesntLikeInvalidValuePassed()
+    public function testGetDependenciesForDoesntLikeInvalidValuePassed(): void
     {
         $this->expectException(ContainerException::class);
         $this->expectExceptionMessage('Invalid dependency type value passed: `666`');
@@ -218,7 +218,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         $this->container->getDependenciesFor(Dependencies::class, 666);
     }
 
-    public function testIdsAreNormalized()
+    public function testIdsAreNormalized(): void
     {
         $this->container->get(NoDependencies::class);
 
@@ -229,7 +229,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertTrue($this->container->has("\\Parable\\Di\\Tests\\Classes\\NoDependencies"));
     }
 
-    public function testClearWorks()
+    public function testClearWorks(): void
     {
         $this->container->get(NoDependencies::class);
         $this->container->get(Dependencies::class);
@@ -243,15 +243,15 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertTrue($this->container->has(Dependencies::class));
     }
 
-    public function testClearThrowsForMissingInstance()
+    public function testClearThrowsForMissingInstance(): void
     {
-        self::expectException(NotFoundException::class);
-        self::expectExceptionMessage("No instance found stored for `Parable\Di\Tests\Classes\NoDependencies`.");
+        $this->expectException(NotFoundException::class);
+        $this->expectExceptionMessage("No instance found stored for `Parable\Di\Tests\Classes\NoDependencies`.");
 
         $this->container->clear(NoDependencies::class);
     }
 
-    public function testClearAllWorks()
+    public function testClearAllWorks(): void
     {
         $this->container->get(NoDependencies::class);
         $this->container->get(Dependencies::class);
@@ -265,7 +265,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertFalse($this->container->has(Dependencies::class));
     }
 
-    public function testClearExceptWorks()
+    public function testClearExceptWorks(): void
     {
         $this->container->get(NoDependencies::class);
         $this->container->get(Dependencies::class);
@@ -279,18 +279,18 @@ class DiTest extends \PHPUnit\Framework\TestCase
         self::assertFalse($this->container->has(Dependencies::class));
     }
 
-    public function testClearExceptThrowsOnMissingInstance()
+    public function testClearExceptThrowsOnMissingInstance(): void
     {
-        self::expectException(NotFoundException::class);
-        self::expectExceptionMessage("No instance found stored for `Parable\Di\Tests\Classes\NoDependencies`.");
+        $this->expectException(NotFoundException::class);
+        $this->expectExceptionMessage("No instance found stored for `Parable\Di\Tests\Classes\NoDependencies`.");
 
         $this->container->clearExcept([NoDependencies::class]);
     }
 
-    public function testThrowsOnCyclicalDependency()
+    public function testThrowsOnCyclicalDependency(): void
     {
-        self::expectException(ContainerException::class);
-        self::expectExceptionMessage(sprintf(
+        $this->expectException(ContainerException::class);
+        $this->expectExceptionMessage(sprintf(
             "Cyclical dependency found between `%s` and `%s`.",
             CyclicalDependencySecond::class,
             CyclicalDependencyFirst::class
@@ -299,7 +299,7 @@ class DiTest extends \PHPUnit\Framework\TestCase
         $this->container->get(CyclicalDependencyFirst::class);
     }
 
-    public function testDiContainerCanBeInjected()
+    public function testDiContainerCanBeInjected(): void
     {
         $instance = $this->container->get(DiAsDependency::class);
 

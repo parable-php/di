@@ -5,6 +5,7 @@ namespace Parable\Di;
 use Parable\Di\Exceptions\ContainerException;
 use Parable\Di\Exceptions\NotFoundException;
 use ReflectionClass;
+use ReflectionNamedType;
 use Throwable;
 
 class Container
@@ -12,20 +13,13 @@ class Container
     public const USE_STORED_DEPENDENCIES = 0;
     public const USE_NEW_DEPENDENCIES = 1;
 
-    /**
-     * @var array
-     */
-    protected $instances = [];
+    protected array $instances = [];
 
-    /**
-     * @var string[][]
-     */
-    protected $relationships = [];
+    /** @var string[][] */
+    protected array $relationships = [];
 
-    /**
-     * @var string[]
-     */
-    protected $maps;
+    /** @var string[] */
+    protected array $maps;
 
     public function __construct()
     {
@@ -135,8 +129,12 @@ class Container
         $name = $this->getDefinitiveName($name);
 
         try {
-            $reflection = new ReflectionClass($name);
-        } catch (Throwable $e) {
+            /*
+             * We @ quiet this so we can be more specific in our exceptions later
+             * (i.e. due to non-optional parameters)
+             */
+            $reflection = @new ReflectionClass($name);
+        } catch (Throwable $t) {
             throw new ContainerException(sprintf(
                 'Could not create instance for class `%s`.',
                 $name
@@ -153,7 +151,15 @@ class Container
 
         $dependencies = [];
         foreach ($parameters as $parameter) {
-            $class = $parameter->getType() && !$parameter->getType()->isBuiltin()
+            $type = $parameter->getType();
+
+            if ($type instanceof ReflectionNamedType) {
+                $builtIn = $type->isBuiltin();
+            } else {
+                $builtIn = false;
+            }
+
+            $class = $parameter->getType() && $builtIn === false
                 ? new ReflectionClass($parameter->getType()->getName())
                 : null;
 

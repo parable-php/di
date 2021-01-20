@@ -4,13 +4,11 @@ namespace Parable\Di\Tests\Classes;
 
 class Dependencies
 {
-    public $value = 'totally different';
+    public string $value = 'totally different';
 
-    public $fakeObject;
-
-    public function __construct(NoDependencies $fakeObject)
-    {
-        $this->fakeObject = $fakeObject;
+    public function __construct(
+        public NoDependencies $fakeObject
+    ) {
         $this->value = $fakeObject->value;
     }
 }

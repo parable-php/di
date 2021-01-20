@@ -1,6 +1,6 @@
 # Parable DI Container
 
-[![Build Status](https://travis-ci.org/parable-php/di.svg?branch=master)](https://travis-ci.org/parable-php/di)
+[![Build Status](https://travis-ci.com/parable-php/di.svg?branch=master)](https://travis-ci.com/parable-php/di)
 [![Latest Stable Version](https://poser.pugx.org/parable-php/di/v/stable)](https://packagist.org/packages/parable-php/di)
 [![Latest Unstable Version](https://poser.pugx.org/parable-php/di/v/unstable)](https://packagist.org/packages/parable-php/di)
 [![License](https://poser.pugx.org/parable-php/di/license)](https://packagist.org/packages/parable-php/di)
@@ -9,7 +9,7 @@ Parable DI is a no-nonsense dependency injection container that gets the job don
 
 ## Install
 
-Php 7.1+ and [composer](https://getcomposer.org) are required.
+Php 8.0+ and [composer](https://getcomposer.org) are required.
 
 ```bash
 $ composer require parable-php/di

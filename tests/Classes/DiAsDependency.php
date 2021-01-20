@@ -6,11 +6,8 @@ use Parable\Di\Container;
 
 class DiAsDependency
 {
-    public $container;
-
     public function __construct(
-        Container $container
+        public Container $container
     ) {
-        $this->container = $container;
     }
 }
