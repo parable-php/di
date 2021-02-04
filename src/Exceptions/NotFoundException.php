@@ -6,7 +6,7 @@ use Exception;
 
 class NotFoundException extends Exception
 {
-    public static function fromId(string $id)
+    public static function fromName(string $id)
     {
         return new self(sprintf(
             "No instance found stored for `%s`.",

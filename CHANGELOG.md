@@ -1,5 +1,10 @@
 # Parable PHP DI
 
+## 0.3.1
+
+_Fixes_
+- Small fix for the new php8 reflection types.
+
 ## 0.3.0
 
 _Changes_

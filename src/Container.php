@@ -28,11 +28,9 @@ class Container
     }
 
     /**
-     * Returns a stored instance or creates a new one and stores it.
-     *
      * @throws ContainerException
      */
-    public function get(string $name)
+    public function get(string $name): object
     {
         $name = $this->getDefinitiveName($name);
 
@@ -54,12 +52,19 @@ class Container
         return isset($this->instances[$name]);
     }
 
+    public function assertHas(string $name): void
+    {
+        if (!$this->has($name)) {
+            throw NotFoundException::fromName($name);
+        }
+    }
+
     /**
      * Build a new instance with stored dependencies.
      *
      * @throws ContainerException
      */
-    public function build(string $name)
+    public function build(string $name): object
     {
         return $this->createInstance($name, self::USE_STORED_DEPENDENCIES);
     }
@@ -69,7 +74,7 @@ class Container
      *
      * @throws ContainerException
      */
-    public function buildAll(string $name)
+    public function buildAll(string $name): object
     {
         return $this->createInstance($name, self::USE_NEW_DEPENDENCIES);
     }
@@ -79,7 +84,7 @@ class Container
      *
      * @throws ContainerException
      */
-    protected function createInstance(string $name, int $useStoredDependencies)
+    protected function createInstance(string $name, int $useStoredDependencies): object
     {
         $name = $this->getDefinitiveName($name);
 
@@ -92,8 +97,8 @@ class Container
 
         try {
             $dependencies = $this->getDependenciesFor($name, $useStoredDependencies);
-        } catch (Throwable $e) {
-            throw new ContainerException($e->getMessage());
+        } catch (Throwable $t) {
+            throw new ContainerException($t->getMessage(), $t->getCode(), $t);
         }
 
         return new $name(...$dependencies);
@@ -120,6 +125,7 @@ class Container
      * Get the dependencies for an instance, based on the constructor.
      * Optionally use stored dependencies or always create new ones.
      *
+     * @return mixed[]
      * @throws ContainerException
      */
     public function getDependenciesFor(
@@ -135,10 +141,14 @@ class Container
              */
             $reflection = @new ReflectionClass($name);
         } catch (Throwable $t) {
-            throw new ContainerException(sprintf(
-                'Could not create instance for class `%s`.',
-                $name
-            ));
+            throw new ContainerException(
+                sprintf(
+                    'Could not create instance for class `%s`.',
+                    $name
+                ),
+                $t->getCode(),
+                $t
+            );
         }
 
         $constructor = $reflection->getConstructor();
@@ -153,15 +163,17 @@ class Container
         foreach ($parameters as $parameter) {
             $type = $parameter->getType();
 
+            $builtIn = false;
+
             if ($type instanceof ReflectionNamedType) {
                 $builtIn = $type->isBuiltin();
-            } else {
-                $builtIn = false;
             }
 
-            $class = $parameter->getType() && $builtIn === false
-                ? new ReflectionClass($parameter->getType()->getName())
-                : null;
+            $class = null;
+
+            if ($parameter->getType() instanceof ReflectionNamedType && $builtIn === false) {
+                $class = new ReflectionClass($parameter->getType()->getName());
+            }
 
             if ($class === null) {
                 if (!$parameter->isOptional()) {
@@ -173,6 +185,7 @@ class Container
 
                 $dependencies[] = $parameter->getDefaultValue();
 
+                // For the foreach loop
                 continue;
             }
 
@@ -196,15 +209,11 @@ class Container
     }
 
     /**
-     * Store the provided instance with the provided id, or the class name of the object.
+     * Store the provided instance with the provided name, or the class name of the object.
      */
-    public function store($instance, string $name = null): void
+    public function store(object $instance, string $name = null): void
     {
-        if ($name === null) {
-            $name = get_class($instance);
-        }
-
-        $name = $this->getDefinitiveName($name);
+        $name = $this->getDefinitiveName($name ?? $instance::class);
 
         $this->instances[$name] = $instance;
     }
@@ -218,9 +227,7 @@ class Container
     {
         $name = $this->getDefinitiveName($name);
 
-        if (!$this->has($name)) {
-            throw NotFoundException::fromId($name);
-        }
+        $this->assertHas($name);
 
         unset($this->instances[$name]);
 
@@ -238,12 +245,11 @@ class Container
     public function clearExcept(array $keep): void
     {
         $kept = [];
+
         foreach ($keep as $name) {
             $name = $this->getDefinitiveName($name);
 
-            if (!$this->has($name)) {
-                throw NotFoundException::fromId($name);
-            }
+            $this->assertHas($name);
 
             $kept[$name] = $this->get($name);
         }
@@ -269,7 +275,10 @@ class Container
     {
         $this->relationships[$class][$dependency] = true;
 
-        if (isset($this->relationships[$class][$dependency]) && isset($this->relationships[$dependency][$class])) {
+        if (isset(
+            $this->relationships[$class][$dependency],
+            $this->relationships[$dependency][$class]
+        )) {
             throw new ContainerException(sprintf(
                 'Cyclical dependency found between `%s` and `%s`.',
                 $class,
