@@ -2,6 +2,7 @@
 
 ## 0.3.2
 
+_Changes_
 - Add static analysis using psalm.
 
 ## 0.3.1
