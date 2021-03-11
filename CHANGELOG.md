@@ -1,5 +1,9 @@
 # Parable PHP DI
 
+## 0.3.2
+
+- Add static analysis using psalm.
+
 ## 0.3.1
 
 _Fixes_

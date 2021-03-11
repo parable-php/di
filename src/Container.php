@@ -15,7 +15,7 @@ class Container
 
     protected array $instances = [];
 
-    /** @var string[][] */
+    /** @var bool[][] */
     protected array $relationships = [];
 
     /** @var string[] */
@@ -98,7 +98,7 @@ class Container
         try {
             $dependencies = $this->getDependenciesFor($name, $useStoredDependencies);
         } catch (Throwable $t) {
-            throw new ContainerException($t->getMessage(), $t->getCode(), $t);
+            throw new ContainerException($t->getMessage(), (int)$t->getCode(), $t);
         }
 
         return new $name(...$dependencies);
@@ -146,14 +146,14 @@ class Container
                     'Could not create instance for class `%s`.',
                     $name
                 ),
-                $t->getCode(),
+                (int)$t->getCode(),
                 $t
             );
         }
 
         $constructor = $reflection->getConstructor();
 
-        if (!$constructor) {
+        if ($constructor === null) {
             return [];
         }
 
@@ -172,7 +172,9 @@ class Container
             $class = null;
 
             if ($parameter->getType() instanceof ReflectionNamedType && $builtIn === false) {
-                $class = new ReflectionClass($parameter->getType()->getName());
+                /** @var ReflectionNamedType $type */
+                $type = $parameter->getType();
+                $class = new ReflectionClass($type->getName());
             }
 
             if ($class === null) {
