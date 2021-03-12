@@ -1,5 +1,16 @@
 # Parable PHP DI
 
+## 1.0.0
+
+It's time! Finally a 1.0.0 release, locking the interface in place for at least a while.
+
+_Changes_
+- Completed the `README`.
+- `clear()` no longer throws on a non-stored instance, since the expected result (that instance no longer being stored) is met.
+- `NotFoundException` renamed to `InstanceNotFoundException` for clarity.
+- Added `unmap(string $requested): void` to unmap _and_ clear any mapped instance.
+- Improved `clearExcept()` to use `clear()` so it also unsets any existing relationships. 
+
 ## 0.3.2
 
 _Changes_

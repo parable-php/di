@@ -4,7 +4,7 @@ namespace Parable\Di\Tests;
 
 use Parable\Di\Container;
 use Parable\Di\Exceptions\ContainerException;
-use Parable\Di\Exceptions\NotFoundException;
+use Parable\Di\Exceptions\InstanceNotFoundException;
 use Parable\Di\Tests\Classes\ScalarDependency;
 use Parable\Di\Tests\Classes\CyclicalDependencyFirst;
 use Parable\Di\Tests\Classes\CyclicalDependencySecond;
@@ -19,14 +19,14 @@ use Parable\Di\Tests\Classes\ScalarDependencyWithDefaultAndNonScalar;
 use Parable\Di\Tests\Classes\ScalarDependencyWithDefaultAndNonScalarReverse;
 use PHPUnit\Framework\TestCase;
 
-class DiTest extends TestCase
+class ContainerTest extends TestCase
 {
     protected Container $container;
 
-    public function setUp(): void
-    {
-        $this->container = new Container();
-    }
+public function setUp(): void
+{
+    $this->container = new Container();
+}
 
     public function testGetStoresAndRetrievesInstance(): void
     {
@@ -132,6 +132,24 @@ class DiTest extends TestCase
 
         self::assertTrue($this->container->has(FakeInterface::class));
         self::assertTrue($this->container->has(FakeWithInterface::class));
+    }
+
+    public function testUnmappingWorksForInterface(): void
+    {
+        // Since mapped, this part should work
+        $this->container->map(FakeInterface::class, FakeWithInterface::class);
+        $this->container->get(FakeInterface::class);
+
+        // But not anymore
+        $this->container->unmap(FakeInterface::class);
+
+        try {
+            $fakeWithInterface = $this->container->get(FakeInterface::class);
+
+            self::fail('Should not have gotten here due to interface instantiation.');
+        } catch (ContainerException $e) {
+            self::assertStringContainsString('Cannot create instance for interface', $e->getMessage());
+        }
     }
 
     public function testGetDependenciesForWorks(): void
@@ -243,14 +261,6 @@ class DiTest extends TestCase
         self::assertTrue($this->container->has(Dependencies::class));
     }
 
-    public function testClearThrowsForMissingInstance(): void
-    {
-        $this->expectException(NotFoundException::class);
-        $this->expectExceptionMessage("No instance found stored for `Parable\Di\Tests\Classes\NoDependencies`.");
-
-        $this->container->clear(NoDependencies::class);
-    }
-
     public function testClearAllWorks(): void
     {
         $this->container->get(NoDependencies::class);
@@ -279,12 +289,15 @@ class DiTest extends TestCase
         self::assertFalse($this->container->has(Dependencies::class));
     }
 
-    public function testClearExceptThrowsOnMissingInstance(): void
+    public function testClearExceptThrowsWhenNonExistingClassIsProvided(): void
     {
-        $this->expectException(NotFoundException::class);
-        $this->expectExceptionMessage("No instance found stored for `Parable\Di\Tests\Classes\NoDependencies`.");
+        $this->expectException(InstanceNotFoundException::class);
+        $this->expectExceptionMessage(sprintf(
+            "No instance found stored for `%s`.",
+            ScalarDependency::class
+        ));
 
-        $this->container->clearExcept([NoDependencies::class]);
+        $this->container->clearExcept([ScalarDependency::class]);
     }
 
     public function testThrowsOnCyclicalDependency(): void

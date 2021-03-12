@@ -4,7 +4,7 @@ namespace Parable\Di\Exceptions;
 
 use Exception;
 
-class NotFoundException extends Exception
+class InstanceNotFoundException extends Exception
 {
     public static function fromName(string $id)
     {

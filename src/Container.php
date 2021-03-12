@@ -3,7 +3,7 @@
 namespace Parable\Di;
 
 use Parable\Di\Exceptions\ContainerException;
-use Parable\Di\Exceptions\NotFoundException;
+use Parable\Di\Exceptions\InstanceNotFoundException;
 use ReflectionClass;
 use ReflectionNamedType;
 use Throwable;
@@ -42,9 +42,6 @@ class Container
         return $this->instances[$name];
     }
 
-    /**
-     * Returns whether an instance is currently stored or not.
-     */
     public function has(string $name): bool
     {
         $name = $this->getDefinitiveName($name);
@@ -55,7 +52,7 @@ class Container
     public function assertHas(string $name): void
     {
         if (!$this->has($name)) {
-            throw NotFoundException::fromName($name);
+            throw InstanceNotFoundException::fromName($name);
         }
     }
 
@@ -80,31 +77,6 @@ class Container
     }
 
     /**
-     * Create an instance with either new or existing dependencies.
-     *
-     * @throws ContainerException
-     */
-    protected function createInstance(string $name, int $useStoredDependencies): object
-    {
-        $name = $this->getDefinitiveName($name);
-
-        if (interface_exists($name)) {
-            throw new ContainerException(sprintf(
-                "Cannot create instance for interface `%s`.",
-                $name
-            ));
-        }
-
-        try {
-            $dependencies = $this->getDependenciesFor($name, $useStoredDependencies);
-        } catch (Throwable $t) {
-            throw new ContainerException($t->getMessage(), (int)$t->getCode(), $t);
-        }
-
-        return new $name(...$dependencies);
-    }
-
-    /**
      * Map the requested name to the replacement name. When the requested
      * name is retrieved, the replacement name will be used to build the instance.
      */
@@ -113,21 +85,12 @@ class Container
         $this->maps[$this->normalize($requested)] = $this->normalize($replacement);
     }
 
-    /**
-     * Return the mapping if it exists, otherwise just return the requested name.
-     */
-    protected function getMapIfExists(string $requested): string
+    public function unmap(string $requested): void
     {
-        return $this->maps[$requested] ?? $requested;
+        unset($this->maps[$requested]);
+        $this->clear($requested);
     }
 
-    /**
-     * Get the dependencies for an instance, based on the constructor.
-     * Optionally use stored dependencies or always create new ones.
-     *
-     * @return mixed[]
-     * @throws ContainerException
-     */
     public function getDependenciesFor(
         string $name,
         int $useStoredDependencies = self::USE_STORED_DEPENDENCIES
@@ -210,9 +173,6 @@ class Container
         return $dependencies;
     }
 
-    /**
-     * Store the provided instance with the provided name, or the class name of the object.
-     */
     public function store(object $instance, string $name = null): void
     {
         $name = $this->getDefinitiveName($name ?? $instance::class);
@@ -220,16 +180,13 @@ class Container
         $this->instances[$name] = $instance;
     }
 
-    /**
-     * Clear the requested instance.
-     *
-     * @throws NotFoundException
-     */
     public function clear(string $name): void
     {
         $name = $this->getDefinitiveName($name);
 
-        $this->assertHas($name);
+        if (!$this->has($name)) {
+            return;
+        }
 
         unset($this->instances[$name]);
 
@@ -237,26 +194,22 @@ class Container
     }
 
     /**
-     * Clear all instances except those provided.
-     *
      * @param string[] $keep
      *
      * @throws ContainerException
-     * @throws NotFoundException
+     * @throws InstanceNotFoundException
      */
     public function clearExcept(array $keep): void
     {
-        $kept = [];
-
         foreach ($keep as $name) {
-            $name = $this->getDefinitiveName($name);
-
             $this->assertHas($name);
-
-            $kept[$name] = $this->get($name);
         }
 
-        $this->instances = $kept;
+        foreach ($this->instances as $name => $instance) {
+            if (!in_array($name, $keep, true)) {
+                $this->clear($name);
+            }
+        }
     }
 
     /**
@@ -266,6 +219,39 @@ class Container
     {
         $this->instances = [];
         $this->relationships = [];
+    }
+
+    /**
+     * Create an instance with either new or existing dependencies.
+     *
+     * @throws ContainerException
+     */
+    protected function createInstance(string $name, int $useStoredDependencies): object
+    {
+        $name = $this->getDefinitiveName($name);
+
+        if (interface_exists($name)) {
+            throw new ContainerException(sprintf(
+                "Cannot create instance for interface `%s`.",
+                $name
+            ));
+        }
+
+        try {
+            $dependencies = $this->getDependenciesFor($name, $useStoredDependencies);
+        } catch (Throwable $t) {
+            throw new ContainerException($t->getMessage(), (int)$t->getCode(), $t);
+        }
+
+        return new $name(...$dependencies);
+    }
+
+    /**
+     * Return the mapping if it exists, otherwise just return the requested name.
+     */
+    protected function getMapIfExists(string $requested): string
+    {
+        return $this->maps[$requested] ?? $requested;
     }
 
     /**
