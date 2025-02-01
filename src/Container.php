@@ -173,7 +173,7 @@ class Container
         return $dependencies;
     }
 
-    public function store(object $instance, string $name = null): void
+    public function store(object $instance, ?string $name = null): void
     {
         $name = $this->getDefinitiveName($name ?? $instance::class);
 
